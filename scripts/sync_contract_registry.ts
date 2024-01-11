@@ -32,8 +32,7 @@ try {
         return;
       }
       latestBlockHeight = height;
-      console.log("latestBlockHeight", latestBlockHeight);
-      // console.log(latestBlockHeight);
+      console.log(latestBlockHeight);
       const chunks = latestBlock.chunks;
       // console.log(chunks);
 
@@ -44,12 +43,6 @@ try {
         if (transactions.length > 0) {
           for (const transaction of transactions) {
             // console.log(JSON.stringify(transaction));
-            console.log({ ...transaction, actions: [...transaction.actions] });
-
-            console.log(transaction.actions[0].FunctionCall?.method_name);
-            console.log(
-              JSON.parse(atob(transaction.actions[0].FunctionCall?.args))
-            );
             //claim bounty
             if (relatedToThisContract(transaction)) {
               // console.log(JSON.stringify(transaction));
@@ -57,17 +50,11 @@ try {
               if (
                 transaction.actions[0].FunctionCall?.method_name == "register"
               ) {
-                console.log(transaction);
-                let argument = JSON.parse(
-                  atob(transaction.actions[0].FunctionCall.args)
-                );
-                console.log(argument);
-
                 try {
                   const result = await collection.insertOne({
                     transaction: JSON.stringify(transaction),
                   });
-                  console.log("result", result);
+                  console.log(result);
                 } catch (error: any) {
                   console.log(error.message);
                 }
