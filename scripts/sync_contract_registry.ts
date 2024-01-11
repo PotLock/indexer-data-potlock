@@ -33,7 +33,7 @@ try {
         return;
       }
       latestBlockHeight = height;
-      // console.log(latestBlockHeight);
+      console.log(latestBlockHeight);
       const chunks = latestBlock.chunks;
       // console.log(chunks);
 
@@ -56,6 +56,7 @@ try {
                 transaction.actions[0].FunctionCall?.method_name == "register"
               ) {
                 try {
+                  console.log(transaction);
                   const result = await collection.insertOne({
                     transaction: JSON.stringify(transaction),
                   });
