@@ -46,7 +46,8 @@ try {
             //claim bounty
             if (relatedToThisContract(transaction)) {
               // console.log(JSON.stringify(transaction));
-
+              console.log(transaction.actions[0].FunctionCall.method_name)
+              console.log(JSON.parse(atob(transaction.actions[0].FunctionCall.args)))
               if (
                 transaction.actions[0].FunctionCall?.method_name == "register"
               ) {
