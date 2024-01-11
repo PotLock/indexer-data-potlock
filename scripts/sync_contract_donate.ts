@@ -32,7 +32,7 @@ try {
         return;
       }
       latestBlockHeight = height;
-      console.log(latestBlockHeight);
+      // console.log(latestBlockHeight);
       const chunks = latestBlock.chunks;
       // console.log(chunks);
 
@@ -62,22 +62,6 @@ try {
                   console.log(error.message);
                 }
               }
-              // if (
-              //   transaction.actions[0].FunctionCall?.method_name == "delete_project"
-              // ) {
-              //   console.log(transaction);
-              //   let argument = JSON.parse(atob(transaction.actions[0].FunctionCall.args))
-              //   console.log(argument);
-              //   // insert DB
-              // }
-              // if (
-              //   transaction.actions[0].FunctionCall?.method_name == "update_project"
-              // ) {
-              //   console.log(transaction);
-              //   let argument = JSON.parse(atob(transaction.actions[0].FunctionCall.args))
-              //   console.log(argument);
-              //   // insert DB
-              // }
             }
           }
         }
