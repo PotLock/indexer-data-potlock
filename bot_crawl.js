@@ -85,42 +85,45 @@ var create_new_bounty = function (transaction) {
 // const bot = new Telegraf(process.env.BOT_TOKEN as string);
 var latestBlockHeight = 0;
 setInterval(function () { return __awaiter(void 0, void 0, void 0, function () {
-    var latestBlock, height, chunks, _i, chunks_1, chunk, chunkTemp, transactions, _a, transactions_1, transaction, error_1;
-    var _b;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
+    var latestBlock, height, chunks, _i, chunks_1, chunk, chunkTemp, transactions, _a, transactions_1, transaction, argument, error_1;
+    var _b, _c, _d;
+    return __generator(this, function (_e) {
+        switch (_e.label) {
             case 0:
-                _c.trys.push([0, 6, , 7]);
+                _e.trys.push([0, 6, , 7]);
                 return [4 /*yield*/, provider.block({ finality: "optimistic" })];
             case 1:
-                latestBlock = _c.sent();
+                latestBlock = _e.sent();
                 height = latestBlock.header.height;
                 if (height === latestBlockHeight) {
                     return [2 /*return*/];
                 }
                 latestBlockHeight = height;
-                console.log(latestBlockHeight);
+                console.log("latestBlockHeight", latestBlockHeight);
                 chunks = latestBlock.chunks;
                 _i = 0, chunks_1 = chunks;
-                _c.label = 2;
+                _e.label = 2;
             case 2:
                 if (!(_i < chunks_1.length)) return [3 /*break*/, 5];
                 chunk = chunks_1[_i];
                 return [4 /*yield*/, provider.chunk(chunk.chunk_hash)];
             case 3:
-                chunkTemp = _c.sent();
+                chunkTemp = _e.sent();
                 transactions = chunkTemp.transactions;
                 if (transactions.length > 0) {
                     for (_a = 0, transactions_1 = transactions; _a < transactions_1.length; _a++) {
                         transaction = transactions_1[_a];
                         // console.log(JSON.stringify(transaction));
                         console.log(__assign(__assign({}, transaction), { actions: __spreadArray([], transaction.actions, true) }));
-                        // console.log(transaction.actions[0].FunctionCall?.method_name);
+                        console.log((_b = transaction.actions[0].FunctionCall) === null || _b === void 0 ? void 0 : _b.method_name);
+                        console.log(JSON.parse(atob((_c = transaction.actions[0].FunctionCall) === null || _c === void 0 ? void 0 : _c.args)));
                         //claim bounty
                         if (bounty_process(transaction)) {
                             // console.log(JSON.stringify(transaction));
-                            if (((_b = transaction.actions[0].FunctionCall) === null || _b === void 0 ? void 0 : _b.method_name) == "get_projects") {
+                            if (((_d = transaction.actions[0].FunctionCall) === null || _d === void 0 ? void 0 : _d.method_name) == "get_projects") {
                                 console.log(transaction);
+                                argument = JSON.parse(atob(transaction.actions[0].FunctionCall.args));
+                                console.log(argument);
                             }
                             // if (
                             //   transaction.actions[0].FunctionCall.method_name == "bounty_action"
@@ -325,18 +328,18 @@ setInterval(function () { return __awaiter(void 0, void 0, void 0, function () {
                         // }
                     }
                 }
-                _c.label = 4;
+                _e.label = 4;
             case 4:
                 _i++;
                 return [3 /*break*/, 2];
             case 5: return [3 /*break*/, 7];
             case 6:
-                error_1 = _c.sent();
+                error_1 = _e.sent();
                 console.error("Error Processing Block:", error_1);
                 return [3 /*break*/, 7];
             case 7: return [2 /*return*/];
         }
     });
-}); }, 500);
+}); }, 2000);
 // bot.use(session());
 // bot.launch();

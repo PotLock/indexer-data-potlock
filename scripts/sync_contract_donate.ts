@@ -1,39 +1,14 @@
-// Objective:
-
-// - To develop a Telegram bot that monitors heroes.build
-// - The bot should automatically track and only report new bounties as they are created and when they are completed.
-
-// Key Features of the Bot:
-
-// - New Bounty Alerts: The bot should send a notification whenever a new bounty is posted on the platform.
-// - Completion Alerts: The bot x`should send a notification when a bounty is marked as completed.
-// - Message Content: Each alert must include comprehensive details of the bounty:
-// + Type and tags of the bounty
-// + Title of the bounty
-// + Owner of the bounty
-// + Deadline
-// + Description of the task.
-// + How many people wanted & Bounty amount // {\"OneForAll\":{\"number_of_slots\":10,\"amount_per_slot\":\"100000
-// + Advanced setting features: KYC, Whitelist, Invoice, Reviewer
-// + Link to the bounty for more details.
-// - Message Clarity: Messages delivered by the bot should be coherent, easy to understand, and well-structured.
-// bounty_done : user - how much they claim - title
-// Smart contact address: bounties.heroes.build
-
-import { session, Telegraf, Context } from "telegraf";
 import * as nearAPI from "near-api-js";
-import axios from "axios";
-const removeMd = require("remove-markdown");
 
 require("dotenv").config();
 
 const provider = new nearAPI.providers.JsonRpcProvider({
   url: process.env.NEAR_RPC_API as string,
 });
-const hero_bounty_address = process.env.HERO_BOUNTY_ADDRESS as string;
+const contractAddress = process.env.HERO_BOUNTY_ADDRESS as string;
 
-const bounty_process = (transaction: any) => {
-  if (hero_bounty_address.includes(transaction.receiver_id)) {
+const relatedToThisContract = (transaction: any) => {
+  if (contractAddress.includes(transaction.receiver_id)) {
     return true;
   }
   return false;
@@ -60,13 +35,10 @@ let latestBlockHeight = 0;
 setInterval(async () => {
   try {
     const latestBlock = await provider.block({ finality: "optimistic" });
-
     const height = latestBlock.header.height;
-
     if (height === latestBlockHeight) {
       return;
     }
-
     latestBlockHeight = height;
     console.log("latestBlockHeight", latestBlockHeight)
     // console.log(latestBlockHeight);
@@ -89,12 +61,32 @@ setInterval(async () => {
             // console.log(JSON.stringify(transaction));
 
             if (
-              transaction.actions[0].FunctionCall?.method_name == "get_projects"
+              transaction.actions[0].FunctionCall?.method_name == "create_project"
             ) {
               console.log(transaction);
               let argument = JSON.parse(atob(transaction.actions[0].FunctionCall.args))
               console.log(argument);
+              // insert DB
             }
+            if (
+              transaction.actions[0].FunctionCall?.method_name == "delete_project"
+            ) {
+              console.log(transaction);
+              let argument = JSON.parse(atob(transaction.actions[0].FunctionCall.args))
+              console.log(argument);
+              // insert DB
+            }
+            if (
+              transaction.actions[0].FunctionCall?.method_name == "update_project"
+            ) {
+              console.log(transaction);
+              let argument = JSON.parse(atob(transaction.actions[0].FunctionCall.args))
+              console.log(argument);
+              // insert DB
+            }
+
+
+
             // if (
             //   transaction.actions[0].FunctionCall.method_name == "bounty_action"
             // ) {

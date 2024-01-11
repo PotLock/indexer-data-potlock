@@ -14,7 +14,8 @@
     "dotenv": "^16.3.1",
     "near-api-js": "^3.0.1",
     "remove-markdown": "^0.5.0",
-    "telegraf": "^4.15.3"
+    "telegraf": "^4.15.3",
+    "typescript": "^5.3.3"
   },
   "devDependencies": {
     "@types/node": "^20.10.8",
