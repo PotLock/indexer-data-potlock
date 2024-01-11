@@ -8,7 +8,7 @@ async function getProjects() {
         request_type: "call_function",
         account_id: "registry.potlock.near",
         method_name: "get_projects",
-        args_base64: "e30=",
+        args_base64: "e30=", // this is arg that is encoded to base64, use this website to view https://www.base64decode.org/
         finality: "optimistic",
     });
 
@@ -35,7 +35,7 @@ async function getDonations() {
         request_type: "call_function",
         account_id: "donate.potlock.near",
         method_name: "get_donations",
-        args_base64: "e30=",
+        args_base64: "e30=",// this is arg that is encoded to base64, use this website to view https://www.base64decode.org/
         finality: "optimistic",
     });
 
@@ -64,7 +64,7 @@ async function getAdmins() {
         request_type: "call_function",
         account_id: "registry.potlock.near",
         method_name: "get_admins",
-        args_base64: "e30=",
+        args_base64: "e30=",// this is arg that is encoded to base64, use this website to view https://www.base64decode.org/
         finality: "optimistic",
     });
 
@@ -86,7 +86,7 @@ async function getDetailProject() {
         request_type: "call_function",
         account_id: "social.near",
         method_name: "get",
-        args_base64: "eyJrZXlzIjpbIm1hZ2ljYnVpbGQubmVhci9wcm9maWxlLyoqIl19",//{"keys":["magicbuild.near/profile/**"]}
+        args_base64: "eyJrZXlzIjpbIm1hZ2ljYnVpbGQubmVhci9wcm9maWxlLyoqIl19",//{"keys":["magicbuild.near/profile/**"]} // this is arg that is encoded to base64, use this website to view https://www.base64decode.org/
         finality: "optimistic",
     });
 
@@ -122,7 +122,7 @@ async function getDonationsForRecipient() {
         request_type: "call_function",
         account_id: "donate.potlock.near",
         method_name: "get_donations_for_recipient",
-        args_base64: "eyJyZWNpcGllbnRfaWQiOiJwcm9vZm9mdmliZXMubmVhciJ9",//{"recipient_id":"proofofvibes.near"}
+        args_base64: "eyJyZWNpcGllbnRfaWQiOiJwcm9vZm9mdmliZXMubmVhciJ9",//{"recipient_id":"proofofvibes.near"} // this is arg that is encoded to base64, use this website to view https://www.base64decode.org/
         finality: "optimistic",
     });
     // format result
