@@ -27,6 +27,7 @@ try {
   setInterval(async () => {
     try {
       const latestBlock = await provider.block({ finality: "optimistic" });
+      // const latestBlock = await provider.block({ blockId: 154104266 });
       const height = latestBlock.header.height;
       if (height === latestBlockHeight) {
         return;
@@ -45,9 +46,12 @@ try {
             // console.log(JSON.stringify(transaction));
             //claim bounty
             if (relatedToThisContract(transaction)) {
-              // console.log(JSON.stringify(transaction));
-              console.log(transaction.actions[0].FunctionCall.method_name)
-              console.log(JSON.parse(atob(transaction.actions[0].FunctionCall.args)))
+              try {
+                console.log(transaction);
+                console.log(transaction.actions[0].FunctionCall.method_name)
+                console.log(JSON.parse(atob(transaction.actions[0].FunctionCall.args)))
+              } catch (e) { }
+
               if (
                 transaction.actions[0].FunctionCall?.method_name == "register"
               ) {
