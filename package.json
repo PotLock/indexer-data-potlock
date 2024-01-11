@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc scripts/*.ts --outDir builds/",
+    "sync_registry": "node scripts/sync_contract_registry.js",
+    "sync_donate": "node scripts/sync_contract_donate.js"
   },
   "keywords": [],
   "author": "",
