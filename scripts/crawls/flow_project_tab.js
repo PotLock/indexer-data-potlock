@@ -160,7 +160,11 @@ async function getDetailProject() {
 
             const res = JSON.parse(Buffer.from(rawResult.result).toString());
             // console.log(res);
-            await collection.updateOne({_id: project._id}, {$set: {details: res[project.project_id]?.profile}})
+            await collection.updateOne({_id: project._id}, {$set: {
+                details: res[project.project_id]?.profile,
+                latest_update: Math.floor(Date.now() / 1000),
+                dateUpdated: new Date(),
+            }})
             console.log(`Updated details for project: ${project.project_id}`);
         }
 
