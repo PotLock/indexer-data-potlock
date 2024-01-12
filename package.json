@@ -20,6 +20,7 @@
     "telegraf": "^4.15.3",
     "typescript": "^5.3.3"
   },
+  "type": "commonjs",
   "devDependencies": {
     "@types/node": "^20.10.8",
     "@types/remove-markdown": "^0.3.4"
