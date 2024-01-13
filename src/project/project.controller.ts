@@ -8,11 +8,15 @@ import {
   Delete,
   Res,
   Req,
+  Query,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ProjectService } from './project.service';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { QueryDTO } from './dto/query-project.dto';
 
 @Controller('project')
+@ApiTags('Project')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
@@ -31,6 +35,11 @@ export class ProjectController {
   }
 
   @Get('')
+  @ApiQuery({
+    type: QueryDTO,
+    description:
+      'example: ?limit=2&page=2&title=magicbuild&sort=-id,dateCreated',
+  })
   async getAllProject(@Res() res: Response, @Req() req: Request) {
     try {
       const result = await this.projectService.getAllProject(req);
@@ -42,7 +51,7 @@ export class ProjectController {
     }
   }
 
-  @Get('/:id')
+  @Get(':id')
   async getSingleProject(
     @Param('id') projectId: string,
     @Res() res: Response,
