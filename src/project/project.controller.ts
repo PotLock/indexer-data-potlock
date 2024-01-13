@@ -37,8 +37,6 @@ export class ProjectController {
   @Get('')
   @ApiQuery({
     type: QueryDTO,
-    description:
-      'example: ?limit=2&page=2&title=magicbuild&sort=-id,dateCreated',
   })
   async getAllProject(@Res() res: Response, @Req() req: Request) {
     try {
