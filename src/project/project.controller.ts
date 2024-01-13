@@ -1,34 +1,60 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Res,
+  Req,
+} from '@nestjs/common';
+import { Request, Response } from 'express';
 import { ProjectService } from './project.service';
-import { CreateProjectDto } from './dto/create-project.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
 
 @Controller('project')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
-  @Post()
-  create(@Body() createProjectDto: CreateProjectDto) {
-    return this.projectService.create(createProjectDto);
+  @Get('/general')
+  async getGeneral(@Res() res: Response) {
+    try {
+      const result = await this.projectService.getGeneral();
+      return res.status(200).json({
+        ...result,
+      });
+    } catch (error: any) {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
   }
 
-  @Get()
-  findAll() {
-    return this.projectService.findAll();
+  @Get('')
+  async getAllProject(@Res() res: Response, @Req() req: Request) {
+    try {
+      const result = await this.projectService.getAllProject(req);
+      return res.status(200).json(result);
+    } catch (error: any) {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.projectService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectService.update(+id, updateProjectDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.projectService.remove(+id);
+  @Get('/:id')
+  async getSingleProject(
+    @Param('id') projectId: string,
+    @Res() res: Response,
+    @Req() req: Request,
+  ) {
+    try {
+      const result = await this.projectService.getProjectDetail(projectId);
+      return res.status(200).json(result);
+    } catch (error: any) {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
   }
 }
