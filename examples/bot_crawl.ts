@@ -80,12 +80,12 @@ setInterval(async () => {
       if (transactions.length > 0) {
         for (const transaction of transactions) {
           // console.log(JSON.stringify(transaction));
-          console.log({ ...transaction, actions: [...transaction.actions] });
+          // console.log({ ...transaction, actions: [...transaction.actions] });
 
-          console.log(transaction.actions[0].FunctionCall?.method_name);
-          console.log(
-            JSON.parse(atob(transaction.actions[0].FunctionCall?.args))
-          );
+          // console.log(transaction.actions[0].FunctionCall?.method_name);
+          // console.log(
+          //   JSON.parse(atob(transaction.actions[0].FunctionCall?.args))
+          // );
           //claim bounty
           if (bounty_process(transaction)) {
             // console.log(JSON.stringify(transaction));
