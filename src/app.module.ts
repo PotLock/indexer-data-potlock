@@ -9,6 +9,7 @@ import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DonationModule } from './donation/donation.module';
+import { FollowModule } from './follow/follow.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { DonationModule } from './donation/donation.module';
     PotsModule,
     UserModule,
     DonationModule,
+    FollowModule,
   ],
   controllers: [AppController],
   providers: [AppService],

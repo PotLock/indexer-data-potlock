@@ -69,27 +69,19 @@ export class ProjectService {
         });
 
       const formattedProjects = allProjects.map((project) => {
-        let profileImageUrl = '';
-        let bannerImageUrl = '';
-        if (project?.details?.image) {
-          const imageUrl = this.getImageUrlFromSocialImage(
-            project?.details?.image,
-          );
-          if (imageUrl) profileImageUrl = imageUrl;
-        }
-        if (project?.details?.image) {
-          const imageUrl = this.getImageUrlFromSocialImage(
-            project?.details?.backgroundImage,
-          );
-          if (imageUrl) bannerImageUrl = imageUrl;
-        }
         const formatted = {
           id: project.id,
           project_id: project.project_id,
           name: project?.details?.name,
           description: project?.details?.description,
-          profileImageUrl,
-          bannerImageUrl,
+          profileImageUrl:
+            project?.details?.image?.ipfs_cid ||
+            project?.details?.image?.url ||
+            '',
+          bannerImageUrl:
+            project?.details?.backgroundImage?.ipfs_cid ||
+            project?.details?.backgroundImage?.url ||
+            '',
           status: project.status,
           tags: [
             project?.details?.category?.text
@@ -197,21 +189,6 @@ export class ProjectService {
         ? `$${(+totalReferralFeesSmallerUnit * nearToUsd).toFixed(2)}`
         : `${totalReferralFeesSmallerUnit} N`;
 
-      let profileImageUrl = '';
-      let bannerImageUrl = '';
-      if (project?.details?.image) {
-        const imageUrl = this.getImageUrlFromSocialImage(
-          project?.details?.image,
-        );
-        if (imageUrl) profileImageUrl = imageUrl;
-      }
-      if (project?.details?.image) {
-        const imageUrl = this.getImageUrlFromSocialImage(
-          project?.details?.backgroundImage,
-        );
-        if (imageUrl) bannerImageUrl = imageUrl;
-      }
-
       let team = [];
       if (project?.details?.team) {
         team = Object.entries(project?.details?.team).map(([address, _]) => ({
@@ -229,8 +206,14 @@ export class ProjectService {
         category:
           project?.details?.category?.text || project?.details?.category || '',
         team: team,
-        profileImageUrl,
-        bannerImageUrl,
+        profileImageUrl:
+          project?.details?.image?.ipfs_cid ||
+          project?.details?.image?.url ||
+          '',
+        bannerImageUrl:
+          project?.details?.backgroundImage?.ipfs_cid ||
+          project?.details?.backgroundImage?.url ||
+          '',
         linktree:
           {
             website: project.details?.linktree?.website
@@ -257,12 +240,4 @@ export class ProjectService {
       throw new Error(error);
     }
   }
-
-  getImageUrlFromSocialImage = (image) => {
-    if (image?.url) {
-      return image?.url;
-    } else if (image?.ipfs_cid) {
-      return `${process.env.IPFS_BASE_URL + image?.ipfs_cid}`;
-    }
-  };
 }
