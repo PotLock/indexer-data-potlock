@@ -10,6 +10,7 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DonationModule } from './donation/donation.module';
 import { FollowModule } from './follow/follow.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { FollowModule } from './follow/follow.module';
     UserModule,
     DonationModule,
     FollowModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService],

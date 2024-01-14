@@ -8,10 +8,12 @@ import { Donation } from 'src/donation/schemas/donation.schema';
 import { Big } from 'big.js';
 import axios from 'axios';
 import { Request } from 'express';
+import { RedisService } from 'src/redis/redis.service';
 
 @Injectable()
 export class ProjectService {
   constructor(
+    private redisService: RedisService,
     @InjectModel(Project.name)
     private projectModel: Model<Project>,
     @InjectModel(Donation.name) private donationModel: Model<Donation>,
@@ -101,6 +103,13 @@ export class ProjectService {
   }
 
   async getGeneral() {
+    const redisClient = this.redisService.getRedisClient();
+
+    const cachedData = await redisClient.get('api:/project/general');
+
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
     const allDonations = await this.donationModel.find({});
     const allProjects = await this.projectModel.find({});
 
@@ -135,12 +144,17 @@ export class ProjectService {
     const donationQuantity = allDonations ? allDonations.length : '-';
     const projectQuantity = allProjects.length;
 
-    return {
+    const projectGeneral = {
       totalContributed,
       uniqueDonors,
       donationQuantity,
       projectQuantity,
     };
+
+    redisClient.set('api:/project/general', JSON.stringify(projectGeneral));
+    redisClient.expire('api:/project/general', +process.env.REDIS_TTL);
+
+    return projectGeneral;
   }
 
   async getProjectDetail(projectId: string) {

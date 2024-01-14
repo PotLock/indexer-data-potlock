@@ -4,10 +4,13 @@ import axios from 'axios';
 import { Model } from 'mongoose';
 import { Project } from 'src/project/schemas/project.schema';
 import { QueryDTO } from './dto/query-follow.dto';
+import { RedisService } from 'src/redis/redis.service';
 
 @Injectable()
 export class FollowService {
   constructor(
+    private redisService: RedisService,
+
     @InjectModel(Project.name)
     private projectModel: Model<Project>,
   ) {}
@@ -15,6 +18,16 @@ export class FollowService {
     try {
       if (!accountId) {
         return '';
+      }
+
+      const redisClient = this.redisService.getRedisClient();
+
+      const cachedData = await redisClient.get(
+        `api:/follow/general/${accountId}`,
+      );
+
+      if (cachedData) {
+        return JSON.parse(cachedData);
       }
 
       const project = await this.projectModel.findOne({
@@ -114,6 +127,15 @@ export class FollowService {
         tags,
       };
 
+      redisClient.set(
+        `api:/follow/general/${accountId}`,
+        JSON.stringify(profileGeneralData),
+      );
+      redisClient.expire(
+        `api:/follow/general/${accountId}`,
+        +process.env.REDIS_TTL,
+      );
+
       return profileGeneralData;
     } catch (error) {
       console.error(error);
@@ -125,6 +147,16 @@ export class FollowService {
     try {
       if (!accountId) {
         return '';
+      }
+
+      const redisClient = this.redisService.getRedisClient();
+
+      const cachedData = await redisClient.get(
+        `api:/follow/following/${accountId}`,
+      );
+
+      if (cachedData) {
+        return JSON.parse(cachedData);
       }
 
       // following
@@ -172,6 +204,15 @@ export class FollowService {
         }),
       );
 
+      redisClient.set(
+        `api:/follow/following/${accountId}`,
+        JSON.stringify(profileFollowingData),
+      );
+      redisClient.expire(
+        `api:/follow/following/${accountId}`,
+        +process.env.REDIS_TTL,
+      );
+
       return profileFollowingData;
     } catch (error) {
       console.error(error);
@@ -183,6 +224,16 @@ export class FollowService {
     try {
       if (!accountId) {
         return '';
+      }
+
+      const redisClient = this.redisService.getRedisClient();
+
+      const cachedData = await redisClient.get(
+        `api:/follow/follower/${accountId}`,
+      );
+
+      if (cachedData) {
+        return JSON.parse(cachedData);
       }
 
       // follower
@@ -246,6 +297,15 @@ export class FollowService {
 
           return data;
         }),
+      );
+
+      redisClient.set(
+        `api:/follow/follower/${accountId}`,
+        JSON.stringify(profileFollowerData),
+      );
+      redisClient.expire(
+        `api:/follow/follower/${accountId}`,
+        +process.env.REDIS_TTL,
       );
 
       return profileFollowerData;
