@@ -8,5 +8,5 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - '6013:3000'
+      - '6015:3000'
     container_name: potlock-backend
