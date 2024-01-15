@@ -79,30 +79,64 @@ export class ProjectService {
           throw new Error(error.message);
         });
 
-      const formattedProjects = allProjects.map((project) => {
-        const formatted = {
-          id: project.id,
-          project_id: project.project_id,
-          name: project?.details?.name,
-          description: project?.details?.description,
-          profileImageUrl:
-            project?.details?.image?.ipfs_cid ||
-            project?.details?.image?.url ||
-            '',
-          bannerImageUrl:
-            project?.details?.backgroundImage?.ipfs_cid ||
-            project?.details?.backgroundImage?.url ||
-            '',
-          status: project.status,
-          tags: [
-            project?.details?.category?.text
-              ? project?.details?.category?.text
-              : '',
-          ],
-        };
+      const allDonations = await this.donationModel.find({});
 
-        return formatted;
-      });
+      const response = await axios.get(
+        'https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd',
+      );
+
+      const nearToUsd = response?.data?.near?.usd;
+
+      const formattedProjects = await Promise.all(
+        allProjects.map(async (project) => {
+          const singleDonation = allDonations.filter(
+            (donation) => donation?.recipient_id === project?.project_id,
+          );
+
+          let totalDonations = new Big('0');
+          singleDonation.forEach((donation) => {
+            const totalAmount = new Big(donation.total_amount);
+            const referralAmount = new Big(donation.referrer_fee || '0');
+            const protocolAmount = new Big(donation.protocol_fee || '0');
+            totalDonations = totalDonations.plus(
+              totalAmount.minus(referralAmount).minus(protocolAmount),
+            );
+          });
+
+          const totalDonationsSmallerUnit = totalDonations
+            .div(1e24)
+            .toNumber()
+            .toFixed(2);
+
+          const totalContributed = nearToUsd
+            ? `$${(+totalDonationsSmallerUnit * nearToUsd).toFixed(2)}`
+            : `${totalDonationsSmallerUnit} N`;
+
+          const formatted = {
+            id: project.id,
+            project_id: project.project_id,
+            name: project?.details?.name,
+            description: project?.details?.description,
+            profileImageUrl:
+              project?.details?.image?.ipfs_cid ||
+              project?.details?.image?.url ||
+              '',
+            bannerImageUrl:
+              project?.details?.backgroundImage?.ipfs_cid ||
+              project?.details?.backgroundImage?.url ||
+              '',
+            status: project.status,
+            tags: [
+              project?.details?.category?.text
+                ? project?.details?.category?.text
+                : '',
+            ],
+            totalContributed,
+          };
+
+          return formatted;
+        }),
+      );
 
       return formattedProjects;
     } catch (error) {
@@ -117,9 +151,7 @@ export class ProjectService {
         project_id: { $in: this.featuredAccountId },
       });
 
-      console.log(allProjects);
-
-      const formattedProjects = Promise.all(
+      const formattedProjects = await Promise.all(
         allProjects.map(async (project) => {
           const donation = await this.donationModel.find({
             recipient_id: project?.project_id,
@@ -239,6 +271,45 @@ export class ProjectService {
     redisClient.expire('api:/project/general', +process.env.REDIS_TTL);
 
     return projectGeneral;
+  }
+
+  async getSingleDonation(accountId: string) {
+    try {
+      const allDonations = await this.donationModel.find({
+        recipient_id: accountId,
+      });
+
+      if (!allDonations) return ['', '', ''];
+
+      let totalDonations = new Big('0');
+      allDonations.forEach((donation) => {
+        const totalAmount = new Big(donation.total_amount);
+        const referralAmount = new Big(donation.referrer_fee || '0');
+        const protocolAmount = new Big(donation.protocol_fee || '0');
+        totalDonations = totalDonations.plus(
+          totalAmount.minus(referralAmount).minus(protocolAmount),
+        );
+      });
+
+      const response = await axios.get(
+        'https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd',
+      );
+
+      const nearToUsd = response?.data?.near?.usd;
+      const totalDonationsSmallerUnit = totalDonations
+        .div(1e24)
+        .toNumber()
+        .toFixed(2);
+
+      const totalContributed = nearToUsd
+        ? `$${(+totalDonationsSmallerUnit * nearToUsd).toFixed(2)}`
+        : `${totalDonationsSmallerUnit} N`;
+
+      return totalContributed;
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
+    }
   }
 
   async getProjectDetail(projectId: string) {
