@@ -147,6 +147,13 @@ export class ProjectService {
 
   async getFeaturedProject() {
     try {
+      const redisClient = this.redisService.getRedisClient();
+
+      const cachedData = await redisClient.get('api:/project/featured');
+
+      if (cachedData) {
+        return JSON.parse(cachedData);
+      }
       const allProjects = await this.projectModel.find({
         project_id: { $in: this.featuredAccountId },
       });
@@ -210,6 +217,12 @@ export class ProjectService {
           return formatted;
         }),
       );
+
+      redisClient.set(
+        'api:/project/featured',
+        JSON.stringify(formattedProjects),
+      );
+      redisClient.expire('api:/project/featured', +process.env.REDIS_TTL);
 
       return formattedProjects;
     } catch (error) {
