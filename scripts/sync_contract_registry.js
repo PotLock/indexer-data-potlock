@@ -3,14 +3,14 @@ import { MongoClient } from "mongodb";
 
 require("dotenv").config();
 
-const client = new MongoClient(process.env.DATABASE_URL as string);
+const client = new MongoClient(process.env.DATABASE_URL );
 
 const provider = new nearAPI.providers.JsonRpcProvider({
-  url: process.env.NEAR_RPC_API as string,
+  url: process.env.NEAR_RPC_API ,
 });
-const contractAddress = process.env.REGISTRY_CONTRACT_ADDRESS as string;
+const contractAddress = process.env.REGISTRY_CONTRACT_ADDRESS ;
 
-const relatedToThisContract = (transaction: any) => {
+const relatedToThisContract = (transaction) => {
   if (contractAddress.includes(transaction.receiver_id)) {
     return true;
   }
@@ -27,7 +27,8 @@ try {
   setInterval(async () => {
     try {
       const latestBlock = await provider.block({ finality: "optimistic" });
-      // const latestBlock = await provider.block({ blockId: 154104266 });
+      // const latestBlock = await provider.block({ blockId: 
+      //   110478286 });
       const height = latestBlock.header.height;
       if (height === latestBlockHeight) {
         return;
@@ -61,7 +62,7 @@ try {
                     transaction: JSON.stringify(transaction),
                   });
                   console.log(result);
-                } catch (error: any) {
+                } catch (error) {
                   console.log(error.message);
                 }
                 // insert DB

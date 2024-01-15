@@ -1,16 +1,17 @@
-import * as nearAPI from "near-api-js";
-import { MongoClient } from "mongodb";
+const nearAPI = require("near-api-js");
+const   {MongoClient}  = require("mongodb");
+const {getDonationsForRecipient} = require ('./crawls/flow_project_tab')
 
 require("dotenv").config();
 
-const client = new MongoClient(process.env.DATABASE_URL as string);
+const client = new MongoClient(process.env.DATABASE_URL );
 
 const provider = new nearAPI.providers.JsonRpcProvider({
-  url: process.env.NEAR_RPC_API as string,
+  url: process.env.NEAR_RPC_API ,
 });
-const contractAddress = process.env.REGISTRY_CONTRACT_ADDRESS as string;
+const contractAddress = process.env.DONATE_CONTRACT_ADDRESS ;
 
-const relatedToThisContract = (transaction: any) => {
+const relatedToThisContract = (transaction) => {
   if (contractAddress.includes(transaction.receiver_id)) {
     return true;
   }
@@ -26,13 +27,16 @@ try {
   const collection = db.collection("donate");
   setInterval(async () => {
     try {
-      const latestBlock = await provider.block({ finality: "optimistic" });
+      // const latestBlock = await provider.block({ finality: "optimistic" });
+      const latestBlock = await provider.block({ blockId: 
+        110478286 });	
+        // console.log(latestBlock)
       const height = latestBlock.header.height;
       if (height === latestBlockHeight) {
         return;
       }
       latestBlockHeight = height;
-      console.log(latestBlockHeight);
+      // console.log(latestBlockHeight);
       const chunks = latestBlock.chunks;
       // console.log(chunks);
 
@@ -47,16 +51,14 @@ try {
               // console.log(JSON.stringify(transaction));
               if (
                 transaction.actions[0].FunctionCall?.method_name == "donate"
-              ) {
-                // insert DB
-                console.log(transaction);
+                ) {
+                  const recipient = JSON.parse(atob(transaction.actions[0].FunctionCall?.args))
+                  // console.log(recipient)
                 try {
-                  const result = await collection.insertOne({
-                    transaction: JSON.stringify({ transaction }),
-                  });
+                  const result = await getDonationsForRecipient(recipient?.recipient_id)
                   // console.log("result", result);
-                  console.log(result);
-                } catch (error: any) {
+                  // console.log(result);
+                } catch (error) {
                   console.log(error.message);
                 }
               }

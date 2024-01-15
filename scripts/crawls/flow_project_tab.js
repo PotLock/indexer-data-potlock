@@ -210,36 +210,79 @@ async function getDetailProject() {
 
 }
 
-async function getDonationsForRecipient() {
-    const rawResult = await provider.query({
-        request_type: "call_function",
-        account_id: "donate.potlock.near",
-        method_name: "get_donations_for_recipient",
-        args_base64: "eyJyZWNpcGllbnRfaWQiOiJwcm9vZm9mdmliZXMubmVhciJ9",//{"recipient_id":"proofofvibes.near"} // this is arg that is encoded to base64, use this website to view https://www.base64decode.org/
-        finality: "optimistic",
-    });
-    // format result
-    const res = JSON.parse(Buffer.from(rawResult.result).toString());
-    console.log(res);
-    /*
-    [{
-        "id": 169,
-        "donor_id": 'isaacwilliam.near',
-        "total_amount": '1000000000000000000000000',
-        "ft_id": 'near',
-        "message": None,
-        "donated_at_ms": 1700838130643,
-        "recipient_id": 'proofofvibes.near',
-        "protocol_fee": '100000000000000000000000',
-        "referrer_id": None,
-        "referrer_fee": None
-    }]
-     */
+async function getDonationsForRecipient(recipientId) {
+    try {
+        await client.connect();
+        const db = client.db("potlock");
+        const collection = db.collection("donations");
+
+
+        let argsBase64 = btoa(`{"recipient_id":"${recipientId}"}`);
+        // console.log(`{"recipient_id":${recipientId}}`)
+        // console.log(argsBase64)
+        
+        const rawResult = await provider.query({
+            request_type: "call_function",
+            account_id: "donate.potlock.near",
+            method_name: "get_donations_for_recipient",
+            args_base64: argsBase64,//{"recipient_id":"proofofvibes.near"} // this is arg that is encoded to base64, use this website to view https://www.base64decode.org/
+            finality: "optimistic",
+        });
+        // format result
+        const res = JSON.parse(Buffer.from(rawResult.result).toString());
+        // console.log(rawResult)
+        // console.log(res);
+        /*
+        [{
+            "id": 169,
+            "donor_id": 'isaacwilliam.near',
+            "total_amount": '1000000000000000000000000',
+            "ft_id": 'near',
+            "message": None,
+            "donated_at_ms": 1700838130643,
+            "recipient_id": 'proofofvibes.near',
+            "protocol_fee": '100000000000000000000000',
+            "referrer_id": None,
+            "referrer_fee": None
+        }]
+         */
+        const currentDate = new Date();
+
+        let hasDonation = false
+
+        const updatedRes = res.map(donation => {
+
+            const { id, ...rest } = donation; 
+
+            const result = collection.find({donate_id: id})
+            if (result) {
+                hasDonation = true
+            } 
+
+            return {
+                ...rest,
+                donate_id: donation.id,
+                dateCreated: currentDate,
+                dateUpdated: null
+            }
+        })
+        if(!hasDonation) {
+            await collection.insertMany(updatedRes)
+        }
+        return;
+
+    } catch (error) {
+        console.error("Error Insert Data:", error);
+    } finally {
+        await client.close()
+    }
+
 }
 
+module.exports = {getDonationsForRecipient}
 
 // getProjects();
 // getDonations();
 // getAdmins();
-getDetailProject();
+// getDetailProject();
 // getDonationsForRecipient();
