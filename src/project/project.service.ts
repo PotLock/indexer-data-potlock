@@ -352,11 +352,11 @@ export class ProjectService {
         donors[donation.donor_id] = true;
       });
 
-      const response = await axios.get(
-        'https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd',
-      );
+      // const response = await axios.get(
+      //   'https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd',
+      // );
 
-      const nearToUsd = response?.data?.near?.usd;
+      // const nearToUsd = response?.data?.near?.usd;
       const totalDonationsSmallerUnit = totalDonations
         .div(1e24)
         .toNumber()
@@ -366,12 +366,15 @@ export class ProjectService {
         .toNumber()
         .toFixed(2);
 
-      const totalContributed = nearToUsd
-        ? `$${(+totalDonationsSmallerUnit * nearToUsd).toFixed(2)}`
-        : `${totalDonationsSmallerUnit} N`;
-      const totalReferralFees = nearToUsd
-        ? `$${(+totalReferralFeesSmallerUnit * nearToUsd).toFixed(2)}`
-        : `${totalReferralFeesSmallerUnit} N`;
+      // const totalContributed = nearToUsd
+      //   ? `$${(+totalDonationsSmallerUnit * nearToUsd).toFixed(2)}`
+      //   : `${totalDonationsSmallerUnit} N`;
+      // const totalReferralFees = nearToUsd
+      //   ? `$${(+totalReferralFeesSmallerUnit * nearToUsd).toFixed(2)}`
+      //   : `${totalReferralFeesSmallerUnit} N`;
+
+      const totalContributed = `${totalDonationsSmallerUnit} N`;
+      const totalReferralFees = `${totalReferralFeesSmallerUnit} N`;
 
       let team = [];
       if (project?.details?.team) {
