@@ -19,6 +19,15 @@ export class ProjectService {
     @InjectModel(Donation.name) private donationModel: Model<Donation>,
   ) {}
 
+  featuredAccountId = [
+    'opact_near.near',
+    'sharddog.near',
+    'sharddog.magicbuild.near',
+    'build.sputnik-dao.near',
+    'evrything.near',
+    'bos.questverse.near',
+  ];
+
   async getAllProject(req: Request) {
     try {
       const queries = { ...req.query };
@@ -94,6 +103,81 @@ export class ProjectService {
 
         return formatted;
       });
+
+      return formattedProjects;
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
+    }
+  }
+
+  async getFeaturedProject() {
+    try {
+      const allProjects = await this.projectModel.find({
+        project_id: { $in: this.featuredAccountId },
+      });
+
+      console.log(allProjects);
+
+      const formattedProjects = Promise.all(
+        allProjects.map(async (project) => {
+          const donation = await this.donationModel.find({
+            recipient_id: project?.project_id,
+          });
+
+          if (!donation) return ['', '', ''];
+
+          let totalDonations = new Big('0');
+          let donors = {};
+          donation.forEach((donation) => {
+            const totalAmount = new Big(donation.total_amount);
+            const referralAmount = new Big(donation.referrer_fee || '0');
+            const protocolAmount = new Big(donation.protocol_fee || '0');
+            totalDonations = totalDonations.plus(
+              totalAmount.minus(referralAmount).minus(protocolAmount),
+            );
+            donors[donation.donor_id] = true;
+          });
+
+          const response = await axios.get(
+            'https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd',
+          );
+
+          const nearToUsd = response?.data?.near?.usd;
+          const totalDonationsSmallerUnit = totalDonations
+            .div(1e24)
+            .toNumber()
+            .toFixed(2);
+
+          const totalContributed = nearToUsd
+            ? `$${(+totalDonationsSmallerUnit * nearToUsd).toFixed(2)}`
+            : `${totalDonationsSmallerUnit} N`;
+
+          const formatted = {
+            id: project.id,
+            project_id: project.project_id,
+            name: project?.details?.name,
+            description: project?.details?.description,
+            profileImageUrl:
+              project?.details?.image?.ipfs_cid ||
+              project?.details?.image?.url ||
+              '',
+            bannerImageUrl:
+              project?.details?.backgroundImage?.ipfs_cid ||
+              project?.details?.backgroundImage?.url ||
+              '',
+            status: project.status,
+            tags: [
+              project?.details?.category?.text
+                ? project?.details?.category?.text
+                : '',
+            ],
+            totalContributed,
+          };
+
+          return formatted;
+        }),
+      );
 
       return formattedProjects;
     } catch (error) {

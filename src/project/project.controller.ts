@@ -49,6 +49,18 @@ export class ProjectController {
     }
   }
 
+  @Get('featured')
+  async getFeaturedProject(@Res() res: Response, @Req() req: Request) {
+    try {
+      const result = await this.projectService.getFeaturedProject();
+      return res.status(200).json(result);
+    } catch (error: any) {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+  }
+
   @Get(':id')
   async getSingleProject(
     @Param('id') projectId: string,
