@@ -9,8 +9,8 @@ WORKDIR /webapp
 COPY ./supervisor/services.conf /etc/supervisor/conf.d
 COPY ./ /webapp 
 RUN npm install
-RUN npm install -g typescript
-RUN npm run build
+# RUN npm install -g typescript
+# RUN npm run build
 
 # uncomment if using CICD(jenkins)
 # ENTRYPOINT ["supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
