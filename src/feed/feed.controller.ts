@@ -12,10 +12,11 @@ import {
 } from '@nestjs/common';
 import { FeedService } from './feed.service';
 import { Request, Response } from 'express';
-import { ApiQuery } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { QueryDTO } from './dto/query-feed-dto';
 
 @Controller('feed')
+@ApiTags('Feed')
 export class FeedController {
   constructor(private readonly feedService: FeedService) {}
 
