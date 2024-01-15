@@ -81,11 +81,11 @@ export class ProjectService {
 
       const allDonations = await this.donationModel.find({});
 
-      const response = await axios.get(
-        'https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd',
-      );
+      // const response = await axios.get(
+      //   'https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd',
+      // );
 
-      const nearToUsd = response?.data?.near?.usd;
+      // const nearToUsd = response?.data?.near?.usd;
 
       const formattedProjects = await Promise.all(
         allProjects.map(async (project) => {
@@ -108,9 +108,11 @@ export class ProjectService {
             .toNumber()
             .toFixed(2);
 
-          const totalContributed = nearToUsd
-            ? `$${(+totalDonationsSmallerUnit * nearToUsd).toFixed(2)}`
-            : `${totalDonationsSmallerUnit} N`;
+          // const totalContributed = nearToUsd
+          //   ? `$${(+totalDonationsSmallerUnit * nearToUsd).toFixed(2)}`
+          //   : `${totalDonationsSmallerUnit} N`;
+
+          const totalContributed = `${totalDonationsSmallerUnit} N`;
 
           const formatted = {
             id: project.id,
