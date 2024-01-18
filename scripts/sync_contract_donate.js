@@ -24,13 +24,13 @@ try {
   async () => await client.connect();
   const db = client.db("potlock");
 
-  const collection = db.collection("donate");
+  const collection = db.collection("donation");
   setInterval(async () => {
     try {
       // const latestBlock = await provider.block({ finality: "optimistic" });
       const latestBlock = await provider.block({ blockId: 
-        110478286 });	
-        // console.log(latestBlock)
+        
+110699231 });	
       const height = latestBlock.header.height;
       if (height === latestBlockHeight) {
         return;
@@ -46,18 +46,13 @@ try {
 
         if (transactions.length > 0) {
           for (const transaction of transactions) {
-            //claim bounty
             if (relatedToThisContract(transaction)) {
-              // console.log(JSON.stringify(transaction));
               if (
                 transaction.actions[0].FunctionCall?.method_name == "donate"
                 ) {
                   const recipient = JSON.parse(atob(transaction.actions[0].FunctionCall?.args))
-                  // console.log(recipient)
                 try {
                   const result = await getDonationsForRecipient(recipient?.recipient_id)
-                  // console.log("result", result);
-                  // console.log(result);
                 } catch (error) {
                   console.log(error.message);
                 }

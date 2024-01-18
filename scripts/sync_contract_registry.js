@@ -1,5 +1,6 @@
-import * as nearAPI from "near-api-js";
-import { MongoClient } from "mongodb";
+const nearAPI = require("near-api-js");
+const   {MongoClient}  = require("mongodb");
+const {getProjectById} = require('./crawls/flow_project_tab')
 
 require("dotenv").config();
 
@@ -23,18 +24,19 @@ try {
   async () => await client.connect();
   const db = client.db("potlock");
 
-  const collection = db.collection("registry");
+  const collection = db.collection("projects");
+
   setInterval(async () => {
     try {
-      const latestBlock = await provider.block({ finality: "optimistic" });
-      // const latestBlock = await provider.block({ blockId: 
-      //   110478286 });
+      // const latestBlock = await provider.block({ finality: "optimistic" });
+      const latestBlock = await provider.block({ blockId: 
+        110631170 });
       const height = latestBlock.header.height;
       if (height === latestBlockHeight) {
         return;
       }
       latestBlockHeight = height;
-      console.log(latestBlockHeight);
+      // console.log(latestBlockHeight);
       const chunks = latestBlock.chunks;
       // console.log(chunks);
 
@@ -44,24 +46,15 @@ try {
 
         if (transactions.length > 0) {
           for (const transaction of transactions) {
-            // console.log(JSON.stringify(transaction));
             //claim bounty
             if (relatedToThisContract(transaction)) {
-              try {
-                // console.log(transaction);
-                // console.log(transaction.actions[0].FunctionCall.method_name)
-                // console.log(JSON.parse(atob(transaction.actions[0].FunctionCall.args)))
-              } catch (e) {}
-
               if (
                 transaction.actions[0].FunctionCall?.method_name == "register"
               ) {
                 try {
-                  console.log(transaction);
-                  const result = await collection.insertOne({
-                    transaction: JSON.stringify(transaction),
-                  });
-                  console.log(result);
+                  const projectId = transaction?.signer_id
+                  const result = await getProjectById(projectId)
+                  
                 } catch (error) {
                   console.log(error.message);
                 }

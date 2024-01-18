@@ -44,7 +44,6 @@ async function getProjects() {
             return {
                 ...rest,
                 project_id: project.id,
-                details: {},
                 dateCreated: currentDate,
                 dateUpdated: null
               };
@@ -54,6 +53,7 @@ async function getProjects() {
 
     } catch (error) {
         console.error("Error Insert Data:", error);
+        throw new Error(error)
     } finally{
         await client.close()
     }
@@ -161,21 +161,20 @@ async function getDetailProject() {
             const res = JSON.parse(Buffer.from(rawResult.result).toString());
 
             detailsRawData = res[project.project_id]?.profile
-            console.log(detailsRawData)
-            await collection.updateOne({_id: project._id}, {$set: {
-                details: {
-                    name : detailsRawData?.name,
-                    description: detailsRawData?.description,
-                    linktree: detailsRawData?.linktree,
-                    image: detailsRawData?.image,
-                    backgroundImage: detailsRawData?.backgroundImage,
-                    tags: detailsRawData?.tags,
-                    category: detailsRawData?.category,
-                    team: detailsRawData?.team,
-                    latest_update: Math.floor(Date.now() / 1000),
-                },
-                dateUpdated: new Date(),
-            }})
+            // await collection.updateOne({_id: project._id}, {$set: {
+            //     details: {
+            //         name : detailsRawData?.name,
+            //         description: detailsRawData?.description,
+            //         linktree: detailsRawData?.linktree,
+            //         image: detailsRawData?.image,
+            //         backgroundImage: detailsRawData?.backgroundImage,
+            //         tags: detailsRawData?.tags,
+            //         category: detailsRawData?.category,
+            //         team: detailsRawData?.team,
+            //         latest_update: Math.floor(Date.now() / 1000),
+            //     },
+            //     dateUpdated: new Date(),
+            // }})
             console.log(`Updated details for project: ${project.project_id}`);
         }
 
@@ -218,7 +217,6 @@ async function getDonationsForRecipient(recipientId) {
 
 
         let argsBase64 = btoa(`{"recipient_id":"${recipientId}"}`);
-        // console.log(`{"recipient_id":${recipientId}}`)
         // console.log(argsBase64)
         
         const rawResult = await provider.query({
@@ -230,56 +228,97 @@ async function getDonationsForRecipient(recipientId) {
         });
         // format result
         const res = JSON.parse(Buffer.from(rawResult.result).toString());
-        // console.log(rawResult)
-        // console.log(res);
-        /*
-        [{
-            "id": 169,
-            "donor_id": 'isaacwilliam.near',
-            "total_amount": '1000000000000000000000000',
-            "ft_id": 'near',
-            "message": None,
-            "donated_at_ms": 1700838130643,
-            "recipient_id": 'proofofvibes.near',
-            "protocol_fee": '100000000000000000000000',
-            "referrer_id": None,
-            "referrer_fee": None
-        }]
-         */
+
         const currentDate = new Date();
 
-        let hasDonation = false
-
-        const updatedRes = res.map(donation => {
-
+        for(const donation of res) {
             const { id, ...rest } = donation; 
 
-            const result = collection.find({donate_id: id})
-            if (result) {
-                hasDonation = true
-            } 
+            const existDonation = await collection.findOne({donate_id: id})
 
-            return {
-                ...rest,
-                donate_id: donation.id,
-                dateCreated: currentDate,
-                dateUpdated: null
+            const newDonationData = {
+                    ...rest,
+                    donate_id: id,
+                    dateCreated: currentDate,
+                    dateUpdated: null
+                }
+
+            if(existDonation) {
+                continue;
+                
             }
-        })
-        if(!hasDonation) {
-            await collection.insertMany(updatedRes)
+            
+            await collection.insertOne(newDonationData)
+            console.log(`Success! Donation with id: ${id} inserted successfully`)
         }
-        return;
 
+        return
+        
     } catch (error) {
         console.error("Error Insert Data:", error);
+        throw new Error(error)
+
     } finally {
         await client.close()
     }
 
 }
 
-module.exports = {getDonationsForRecipient}
+async function getProjectById(projectId) {
+    try {
+        await client.connect();
+        const db = client.db("potlock");
+        const collection = db.collection("projects");
+
+        let argsBase64 = btoa(`{"project_id":"${projectId}"}`);
+
+        const rawResult = await provider.query({
+            request_type: "call_function",
+            account_id: "registry.potlock.near",
+            method_name: "get_project_by_id",
+            args_base64: argsBase64,//{"recipient_id":"proofofvibes.near"} // this is arg that is encoded to base64, use this website to view https://www.base64decode.org/
+            finality: "optimistic",
+        });
+
+        const res = JSON.parse(Buffer.from(rawResult.result).toString());
+        const currentDate = new Date();
+        
+        const { id, ...rest } = res; 
+
+        const projectData = {
+            ...rest,
+            project_id : id,
+            dateCreated: currentDate,
+            dateUpdated: null
+        };
+
+        const existProject = await collection.findOne({project_id: id})
+
+        if(existProject) {
+            await collection.updateOne({_id: existProject.id}, {$set: projectData}, (err, res) => {
+                if (err) throw err;
+            })
+            console.log("Success! Project updated successfully")
+            return
+        }
+
+        await collection.insertOne(projectData)
+        
+        console.log("Success! Project inserted successfully")
+
+        return;
+
+    } catch (error) {
+        console.error("Error Insert Data:", error);
+        throw new Error(error)
+    } finally {
+        await client.close()
+
+    }
+}
+
+
+module.exports = {getDonationsForRecipient, getProjectById}
 
 // getProjects();
 // getDonations();
