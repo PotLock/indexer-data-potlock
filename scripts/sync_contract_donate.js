@@ -27,10 +27,10 @@ try {
   const collection = db.collection("donation");
   setInterval(async () => {
     try {
-      // const latestBlock = await provider.block({ finality: "optimistic" });
-      const latestBlock = await provider.block({ blockId: 
+      const latestBlock = await provider.block({ finality: "optimistic" });
+//       const latestBlock = await provider.block({ blockId: 
         
-110699231 });	
+// 110699231 });	
       const height = latestBlock.header.height;
       if (height === latestBlockHeight) {
         return;

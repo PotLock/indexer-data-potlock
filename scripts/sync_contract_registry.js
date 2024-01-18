@@ -28,9 +28,9 @@ try {
 
   setInterval(async () => {
     try {
-      // const latestBlock = await provider.block({ finality: "optimistic" });
-      const latestBlock = await provider.block({ blockId: 
-        110631170 });
+      const latestBlock = await provider.block({ finality: "optimistic" });
+      // const latestBlock = await provider.block({ blockId: 
+      //   110631170 });
       const height = latestBlock.header.height;
       if (height === latestBlockHeight) {
         return;
