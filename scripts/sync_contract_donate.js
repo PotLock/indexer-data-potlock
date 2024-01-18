@@ -28,15 +28,13 @@ try {
   setInterval(async () => {
     try {
       const latestBlock = await provider.block({ finality: "optimistic" });
-//       const latestBlock = await provider.block({ blockId: 
-        
-// 110699231 });	
+      // const latestBlock = await provider.block({ blockId: 110715363 });	
       const height = latestBlock.header.height;
       if (height === latestBlockHeight) {
         return;
       }
       latestBlockHeight = height;
-      // console.log(latestBlockHeight);
+      console.log(latestBlockHeight);
       const chunks = latestBlock.chunks;
       // console.log(chunks);
 
@@ -51,11 +49,7 @@ try {
                 transaction.actions[0].FunctionCall?.method_name == "donate"
                 ) {
                   const recipient = JSON.parse(atob(transaction.actions[0].FunctionCall?.args))
-                try {
-                  const result = await getDonationsForRecipient(recipient?.recipient_id)
-                } catch (error) {
-                  console.log(error.message);
-                }
+                  await getDonationsForRecipient(recipient?.recipient_id)
               }
             }
           }
@@ -65,6 +59,6 @@ try {
       console.error("Error Processing Block:", error);
     }
   }, 2000);
-} finally {
-  async () => await client.close();
+} catch (error) {
+  console.error("Error Processing Block:", error);
 }

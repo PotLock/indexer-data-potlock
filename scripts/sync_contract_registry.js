@@ -36,7 +36,7 @@ try {
         return;
       }
       latestBlockHeight = height;
-      // console.log(latestBlockHeight);
+      console.log(latestBlockHeight);
       const chunks = latestBlock.chunks;
       // console.log(chunks);
 
@@ -51,37 +51,10 @@ try {
               if (
                 transaction.actions[0].FunctionCall?.method_name == "register"
               ) {
-                try {
                   const projectId = transaction?.signer_id
-                  const result = await getProjectById(projectId)
-                  
-                } catch (error) {
-                  console.log(error.message);
-                }
-                // insert DB
+                  await getProjectById(projectId)
               }
-              // if (
-              //   transaction.actions[0].FunctionCall?.method_name ==
-              //   "delete_project"
-              // ) {
-              //   console.log(transaction);
-              //   let argument = JSON.parse(
-              //     atob(transaction.actions[0].FunctionCall.args)
-              //   );
-              //   console.log(argument);
-              //   // insert DB
-              // }
-              // if (
-              //   transaction.actions[0].FunctionCall?.method_name ==
-              //   "update_project"
-              // ) {
-              //   console.log(transaction);
-              //   let argument = JSON.parse(
-              //     atob(transaction.actions[0].FunctionCall.args)
-              //   );
-              //   console.log(argument);
-              //   // insert DB
-              // }
+              
             }
           }
         }
@@ -90,6 +63,5 @@ try {
       console.error("Error Processing Block:", error);
     }
   }, 2000);
-} finally {
-  async () => await client.close();
-}
+} catch (error) {
+  console.error("Error Processing Block:", error);}

@@ -258,9 +258,7 @@ async function getDonationsForRecipient(recipientId) {
         console.error("Error Insert Data:", error);
         throw new Error(error)
 
-    } finally {
-        await client.close()
-    }
+    } 
 
 }
 
@@ -311,9 +309,6 @@ async function getProjectById(projectId) {
     } catch (error) {
         console.error("Error Insert Data:", error);
         throw new Error(error)
-    } finally {
-        await client.close()
-
     }
 }
 
