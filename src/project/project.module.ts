@@ -16,5 +16,6 @@ import { RedisModule } from 'src/redis/redis.module';
       { name: Donation.name, schema: DonationSchema },
     ]),
   ],
+  exports: [ProjectService],
 })
 export class ProjectModule {}

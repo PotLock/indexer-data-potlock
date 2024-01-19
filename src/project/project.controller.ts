@@ -61,14 +61,30 @@ export class ProjectController {
     }
   }
 
-  @Get(':id')
+  @Get(':project_id')
   async getSingleProject(
-    @Param('id') projectId: string,
+    @Param('project_id') projectId: string,
     @Res() res: Response,
     @Req() req: Request,
   ) {
     try {
       const result = await this.projectService.getProjectDetail(projectId);
+      return res.status(200).json(result);
+    } catch (error: any) {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+  }
+
+  @Get('social-profile/:id')
+  async getSocialProfile(
+    @Param('id') userId: string,
+    @Res() res: Response,
+    @Req() req: Request,
+  ) {
+    try {
+      const result = await this.projectService.getSocialProfile(userId);
       return res.status(200).json(result);
     } catch (error: any) {
       return res.status(400).json({

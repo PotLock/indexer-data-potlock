@@ -28,6 +28,17 @@ export class ProjectService {
     'bos.questverse.near',
   ];
 
+  CATEGORY_MAPPINGS = {
+    'social-impact': 'Social Impact',
+    'non-profit': 'NonProfit',
+    climate: 'Climate',
+    'public-good': 'Public Good',
+    'de-sci': 'DeSci',
+    'open-source': 'Open Source',
+    community: 'Community',
+    education: 'Education',
+  };
+
   async getAllProject(req: Request) {
     try {
       const queries = { ...req.query };
@@ -81,11 +92,7 @@ export class ProjectService {
 
       const allDonations = await this.donationModel.find({});
 
-      // const response = await axios.get(
-      //   'https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd',
-      // );
-
-      // const nearToUsd = response?.data?.near?.usd;
+      const nearToUsd = await this.getNearToUsdExchangeRate();
 
       const formattedProjects = await Promise.all(
         allProjects.map(async (project) => {
@@ -108,31 +115,35 @@ export class ProjectService {
             .toNumber()
             .toFixed(2);
 
-          // const totalContributed = nearToUsd
-          //   ? `$${(+totalDonationsSmallerUnit * nearToUsd).toFixed(2)}`
-          //   : `${totalDonationsSmallerUnit} N`;
+          const totalContributed = nearToUsd
+            ? `$${(+totalDonationsSmallerUnit * nearToUsd).toFixed(2)}`
+            : `${totalDonationsSmallerUnit} N`;
 
-          const totalContributed = `${totalDonationsSmallerUnit} N`;
+          const socialProfile = await this.getSocialProfile(
+            project?.project_id,
+          );
 
           const formatted = {
             id: project.id,
             project_id: project.project_id,
-            name: project?.details?.name,
-            description: project?.details?.description,
+            name: socialProfile?.name,
+            description: socialProfile?.description,
             profileImageUrl:
-              project?.details?.image?.ipfs_cid ||
-              project?.details?.image?.url ||
+              socialProfile?.image?.ipfs_cid ||
+              socialProfile?.image?.url ||
+              socialProfile?.image ||
               '',
             bannerImageUrl:
-              project?.details?.backgroundImage?.ipfs_cid ||
-              project?.details?.backgroundImage?.url ||
+              socialProfile?.backgroundImage?.ipfs_cid ||
+              socialProfile?.backgroundImage?.url ||
+              socialProfile?.backgroundImage ||
               '',
-            status: project.status,
             tags: [
-              project?.details?.category?.text
-                ? project?.details?.category?.text
-                : '',
+              socialProfile?.category?.text ||
+                this.CATEGORY_MAPPINGS[socialProfile?.category] ||
+                '',
             ],
+            status: project.status,
             totalContributed,
           };
 
@@ -180,11 +191,7 @@ export class ProjectService {
             donors[donation.donor_id] = true;
           });
 
-          const response = await axios.get(
-            'https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd',
-          );
-
-          const nearToUsd = response?.data?.near?.usd;
+          const nearToUsd = await this.getNearToUsdExchangeRate();
           const totalDonationsSmallerUnit = totalDonations
             .div(1e24)
             .toNumber()
@@ -194,25 +201,29 @@ export class ProjectService {
             ? `$${(+totalDonationsSmallerUnit * nearToUsd).toFixed(2)}`
             : `${totalDonationsSmallerUnit} N`;
 
+          const socialProfile = await this.getSocialProfile(project.project_id);
+
           const formatted = {
             id: project.id,
             project_id: project.project_id,
-            name: project?.details?.name,
-            description: project?.details?.description,
+            name: socialProfile?.name,
+            description: socialProfile?.description,
             profileImageUrl:
-              project?.details?.image?.ipfs_cid ||
-              project?.details?.image?.url ||
+              socialProfile?.image?.ipfs_cid ||
+              socialProfile?.image?.url ||
+              socialProfile?.image ||
               '',
             bannerImageUrl:
-              project?.details?.backgroundImage?.ipfs_cid ||
-              project?.details?.backgroundImage?.url ||
+              socialProfile?.backgroundImage?.ipfs_cid ||
+              socialProfile?.backgroundImage?.url ||
+              socialProfile?.backgroundImage ||
               '',
-            status: project.status,
             tags: [
-              project?.details?.category?.text
-                ? project?.details?.category?.text
-                : '',
+              socialProfile?.category?.text ||
+                this.CATEGORY_MAPPINGS[socialProfile?.category] ||
+                '',
             ],
+            status: project.status,
             totalContributed,
           };
 
@@ -258,11 +269,7 @@ export class ProjectService {
       donors[donation.donor_id] = true;
     });
 
-    const response = await axios.get(
-      'https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd',
-    );
-
-    const nearToUsd = response?.data?.near?.usd;
+    const nearToUsd = await this.getNearToUsdExchangeRate();
     const totalDonationsSmallerUnit = totalDonations
       .div(1e24)
       .toNumber()
@@ -306,11 +313,7 @@ export class ProjectService {
         );
       });
 
-      const response = await axios.get(
-        'https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd',
-      );
-
-      const nearToUsd = response?.data?.near?.usd;
+      const nearToUsd = await this.getNearToUsdExchangeRate();
       const totalDonationsSmallerUnit = totalDonations
         .div(1e24)
         .toNumber()
@@ -329,6 +332,16 @@ export class ProjectService {
 
   async getProjectDetail(projectId: string) {
     try {
+      const redisClient = this.redisService.getRedisClient();
+
+      const cachedData = await redisClient.get(
+        `api:/project/detail:${projectId}`,
+      );
+
+      if (cachedData) {
+        return JSON.parse(cachedData);
+      }
+
       const project = await this.projectModel.findById(projectId);
       const donations = await this.donationModel.find({
         recipient_id: project.project_id,
@@ -352,11 +365,7 @@ export class ProjectService {
         donors[donation.donor_id] = true;
       });
 
-      // const response = await axios.get(
-      //   'https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd',
-      // );
-
-      // const nearToUsd = response?.data?.near?.usd;
+      const nearToUsd = await this.getNearToUsdExchangeRate();
       const totalDonationsSmallerUnit = totalDonations
         .div(1e24)
         .toNumber()
@@ -366,19 +375,18 @@ export class ProjectService {
         .toNumber()
         .toFixed(2);
 
-      // const totalContributed = nearToUsd
-      //   ? `$${(+totalDonationsSmallerUnit * nearToUsd).toFixed(2)}`
-      //   : `${totalDonationsSmallerUnit} N`;
-      // const totalReferralFees = nearToUsd
-      //   ? `$${(+totalReferralFeesSmallerUnit * nearToUsd).toFixed(2)}`
-      //   : `${totalReferralFeesSmallerUnit} N`;
+      const totalContributed = nearToUsd
+        ? `$${(+totalDonationsSmallerUnit * nearToUsd).toFixed(2)}`
+        : `${totalDonationsSmallerUnit} N`;
+      const totalReferralFees = nearToUsd
+        ? `$${(+totalReferralFeesSmallerUnit * nearToUsd).toFixed(2)}`
+        : `${totalReferralFeesSmallerUnit} N`;
 
-      const totalContributed = `${totalDonationsSmallerUnit} N`;
-      const totalReferralFees = `${totalReferralFeesSmallerUnit} N`;
-
+      const socialProfile = await this.getSocialProfile(project.project_id);
       let team = [];
-      if (project?.details?.team) {
-        team = Object.entries(project?.details?.team).map(([address, _]) => ({
+
+      if (socialProfile?.team) {
+        team = Object.entries(socialProfile?.team).map(([address, _]) => ({
           address,
           imageUrl: `https://near.social/mob.near/widget/ProfilePage?accountId=${address}`,
         }));
@@ -387,33 +395,40 @@ export class ProjectService {
       const projectDetail = {
         totalContributed,
         totalReferralFees,
-        name: project?.details?.name || '',
-        project_id: project?.project_id || '',
-        description: project?.details?.description || '',
+        name: socialProfile?.name || '',
+        project_id: socialProfile?.project_id || '',
+        description: socialProfile?.description || '',
         category:
-          project?.details?.category?.text || project?.details?.category || '',
+          socialProfile?.category?.text || socialProfile?.category || '',
         team: team,
         profileImageUrl:
-          project?.details?.image?.ipfs_cid ||
-          project?.details?.image?.url ||
+          socialProfile?.image?.ipfs_cid ||
+          socialProfile?.image?.url ||
+          socialProfile?.image ||
           '',
         bannerImageUrl:
-          project?.details?.backgroundImage?.ipfs_cid ||
-          project?.details?.backgroundImage?.url ||
+          socialProfile?.backgroundImage?.ipfs_cid ||
+          socialProfile?.backgroundImage?.url ||
+          socialProfile?.backgroundImage ||
           '',
+        tags: [
+          socialProfile?.category?.text ||
+            this.CATEGORY_MAPPINGS[socialProfile?.category] ||
+            '',
+        ],
         linktree:
           {
-            website: project.details?.linktree?.website
-              ? project.details?.linktree?.website
+            website: socialProfile?.linktree?.website
+              ? socialProfile?.linktree?.website
               : '',
-            twitter: project.details?.linktree?.twitter
-              ? `https://twitter.com/${project.details?.linktree?.twitter}`
+            twitter: socialProfile?.linktree?.twitter
+              ? `https://twitter.com/${socialProfile?.linktree?.twitter}`
               : '',
-            telegram: project.details?.linktree?.telegram
-              ? project.details?.linktree?.telegram
+            telegram: socialProfile?.linktree?.telegram
+              ? socialProfile?.linktree?.telegram
               : '',
-            github: project.details?.linktree?.github
-              ? `https://github.com/${project.details?.linktree?.github}`
+            github: socialProfile?.linktree?.github
+              ? `https://github.com/${socialProfile?.linktree?.github}`
               : '',
             near: `https://near.social/mob.near/widget/ProfilePage?accountId=${project?.project_id}`,
           } || {},
@@ -421,10 +436,62 @@ export class ProjectService {
         follower: `https://near.social/mob.near/widget/FollowPage?accountId=${project?.project_id}&tab=follower`,
       };
 
+      redisClient.set(
+        `api:/project/detail:${projectId}`,
+        JSON.stringify(projectDetail),
+      );
+      redisClient.expire(
+        `api:/project/detail:${projectId}`,
+        +process.env.REDIS_TTL,
+      );
+
       return projectDetail;
     } catch (error) {
       console.error(error);
       throw new Error(error);
+    }
+  }
+
+  async getSocialProfile(userId: string) {
+    try {
+      if (!userId) return '';
+      // let argsBase64 = btoa(`{"keys":["${userId}/profile/**"]}`);
+
+      const socialProfileRequestData = {
+        request_type: 'call_function',
+        account_id: 'social.near',
+        method_name: 'get',
+        keys: [`${userId}/profile/**`],
+        finality: 'optimistic',
+      };
+      const socialProfileResult = await axios.post(
+        'https://api.near.social/get',
+        socialProfileRequestData,
+      );
+
+      const socialProfile = socialProfileResult.data[userId]?.profile;
+
+      return socialProfile;
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
+    }
+  }
+
+  async getNearToUsdExchangeRate() {
+    try {
+      const response = await axios.get(
+        'https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd',
+      );
+
+      return response?.data?.near?.usd;
+    } catch (error) {
+      if (error.response && error.response.status === 429) {
+        return null;
+      } else {
+        console.error(error);
+        throw new Error(error.message);
+      }
     }
   }
 }

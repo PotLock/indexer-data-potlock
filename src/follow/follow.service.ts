@@ -5,11 +5,13 @@ import { Model } from 'mongoose';
 import { Project } from 'src/project/schemas/project.schema';
 import { QueryDTO } from './dto/query-follow.dto';
 import { RedisService } from 'src/redis/redis.service';
+import { ProjectService } from 'src/project/project.service';
 
 @Injectable()
 export class FollowService {
   constructor(
     private redisService: RedisService,
+    private projectService: ProjectService,
 
     @InjectModel(Project.name)
     private projectModel: Model<Project>,
@@ -94,33 +96,38 @@ export class FollowService {
         ? Object.keys(rawTagsData[accountId]?.profile?.tags || {})
         : null;
 
+      const socialProfile =
+        await this.projectService.getSocialProfile(accountId);
+
       // result
       const profileGeneralData = {
         numFollowing,
         numFollowers,
         profileImageUrl:
-          project?.details?.image?.ipfs_cid ||
-          project?.details?.image?.url ||
+          socialProfile?.image?.ipfs_cid ||
+          socialProfile?.image?.url ||
+          socialProfile?.image ||
           '',
         bannerImageUrl:
-          project?.details?.backgroundImage?.ipfs_cid ||
-          project?.details?.backgroundImage?.url ||
+          socialProfile?.backgroundImage?.ipfs_cid ||
+          socialProfile?.backgroundImage?.url ||
+          socialProfile?.backgroundImage ||
           '',
         accountId,
-        accountName: project.details?.name,
+        accountName: socialProfile?.name,
         linktree:
           {
-            website: project.details?.linktree?.website
-              ? project.details?.linktree?.website
+            website: socialProfile?.linktree?.website
+              ? socialProfile?.linktree?.website
               : '',
-            twitter: project.details?.linktree?.twitter
-              ? `https://twitter.com/${project.details?.linktree?.twitter}`
+            twitter: socialProfile?.linktree?.twitter
+              ? `https://twitter.com/${socialProfile?.linktree?.twitter}`
               : '',
-            telegram: project.details?.linktree?.telegram
-              ? project.details?.linktree?.telegram
+            telegram: socialProfile?.linktree?.telegram
+              ? socialProfile?.linktree?.telegram
               : '',
-            github: project.details?.linktree?.github
-              ? `https://github.com/${project.details?.linktree?.github}`
+            github: socialProfile?.linktree?.github
+              ? `https://github.com/${socialProfile?.linktree?.github}`
               : '',
             near: `https://near.social/mob.near/widget/ProfilePage?accountId=${project?.project_id}`,
           } || {},
