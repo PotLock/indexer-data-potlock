@@ -71,7 +71,7 @@ export class FollowService {
 
       // numFollowing and numFollowers
       const numFollowing = following
-        ? Object.keys(following[accountId].graph.follow || {}).length
+        ? Object.keys(following[accountId]?.graph?.follow || {}).length
         : null;
       const numFollowers = followers
         ? Object.keys(followers || {}).length
