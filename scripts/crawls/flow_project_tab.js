@@ -312,6 +312,28 @@ async function getProjectById(projectId) {
     }
 }
 
+// async function getTotalContributedProject(projectId){
+//     try {
+//         await client.connect();
+//         const db = client.db("potlock");
+//         const collectionProject = db.collection("projects");
+//         const collectionDonation = db.collection("projects");
+
+//         let argsBase64 = btoa(`{"recipient_id":"${recipientId}"}`);
+//         // console.log(argsBase64)
+        
+//         const rawResult = await provider.query({
+//             request_type: "call_function",
+//             account_id: "donate.potlock.near",
+//             method_name: "get_donation_by_id",
+//             args_base64: argsBase64,//{"recipient_id":"proofofvibes.near"} // this is arg that is encoded to base64, use this website to view https://www.base64decode.org/
+//             finality: "optimistic",
+//         });
+
+//     } catch (error) {
+        
+//     }
+// }
 
 module.exports = {getDonationsForRecipient, getProjectById}
 
