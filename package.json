@@ -1,0 +1,28 @@
+{
+  "name": "crawl-data-smc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc scripts/*.ts --outDir builds/",
+    "sync_registry": "node scripts/sync_contract_registry.js",
+    "sync_donate": "node scripts/sync_contract_donate.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.5",
+    "dotenv": "^16.3.1",
+    "mongodb": "^6.3.0",
+    "near-api-js": "^3.0.1",
+    "remove-markdown": "^0.5.0",
+    "telegraf": "^4.15.3",
+    "typescript": "^5.3.3"
+  },
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/node": "^20.10.8",
+    "@types/remove-markdown": "^0.3.4"
+  }
+}
