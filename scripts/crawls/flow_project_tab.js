@@ -1,6 +1,7 @@
 const { providers } = require("near-api-js");
 const provider = new providers.JsonRpcProvider("https://rpc.mainnet.near.org");
 const  {MongoClient} = require("mongodb") 
+const {Big} = require("big.js")
 require("dotenv").config();
 
 const client = new MongoClient(process.env.DATABASE_URL);
@@ -65,7 +66,8 @@ async function getDonations() {
     try {
         await client.connect();
         const db = client.db("potlock");
-        const collection = db.collection("donations");
+        const collectionDonation = db.collection("donations");
+        const collectionProject = db.collection("projects");
 
         const rawResult = await provider.query({
             request_type: "call_function",
@@ -98,7 +100,7 @@ async function getDonations() {
         const updatedRes = res.map(donation => {
 
             const { id, ...rest } = donation; 
-
+    
             return {
                 ...rest,
                 donate_id: donation.id,
@@ -107,7 +109,8 @@ async function getDonations() {
             }
         })
         
-        await collection.insertMany(updatedRes)
+        await collectionDonation.insertMany(updatedRes)
+        
         console.log("Success! Donations inserted successfully")
     } catch (error) {
         console.error("Error Insert Data:", error);
@@ -213,8 +216,8 @@ async function getDonationsForRecipient(recipientId) {
     try {
         await client.connect();
         const db = client.db("potlock");
-        const collection = db.collection("donations");
-
+        const collectionDonation = db.collection("donations");
+        const collectionProject = db.collection("projects");
 
         let argsBase64 = btoa(`{"recipient_id":"${recipientId}"}`);
         // console.log(argsBase64)
@@ -231,34 +234,71 @@ async function getDonationsForRecipient(recipientId) {
 
         const currentDate = new Date();
 
+        let totalDonations = new Big('0');
+        let totalReferral = new Big('0');
+
+        let donors = {};
         for(const donation of res) {
             const { id, ...rest } = donation; 
 
-            const existDonation = await collection.findOne({donate_id: id})
+            const existDonation = await collectionDonation.findOne({donate_id: id})
+
+            const totalAmount = new Big(donation.total_amount);
+            const referralAmount = new Big(donation.referrer_fee || '0');
+            const protocolAmount = new Big(donation.protocol_fee || '0');
+            totalDonations = totalDonations.plus(
+              totalAmount.minus(referralAmount).minus(protocolAmount),
+            );
+            totalReferral = totalReferral.plus(referralAmount);
+
+            donors[donation.donor_id] = true;
+
 
             const newDonationData = {
                     ...rest,
                     donate_id: id,
                     dateCreated: currentDate,
-                    dateUpdated: null
+                    dateUpdated: null,
                 }
 
             if(existDonation) {
                 continue;
-                
             }
+
+            await collectionDonation.insertOne(newDonationData)
+
             
-            await collection.insertOne(newDonationData)
             console.log(`Success! Donation with id: ${id} inserted successfully`)
         }
 
-        return
+        const totalDonationsSmallerUnit = totalDonations
+        .div(1e24)
+        .toNumber()
+        .toFixed(2);
+
+        const totalReferralFeesSmallerUnit = totalReferral
+        .div(1e24)
+        .toNumber()
+        .toFixed(2);
+
+        const uniqueDonors = Object.keys(donors).length;
+        
+        await collectionProject.updateOne({project_id: recipientId}, {$set:{
+            totalDonations: totalDonationsSmallerUnit,
+            donors: uniqueDonors,
+            totalReferral :totalReferralFeesSmallerUnit
+
+        }})
+
+        return 
         
     } catch (error) {
         console.error("Error Insert Data:", error);
         throw new Error(error)
 
-    } 
+    } finally {
+        await client.close()
+    }
 
 }
 
@@ -312,28 +352,81 @@ async function getProjectById(projectId) {
     }
 }
 
-// async function getTotalContributedProject(projectId){
-//     try {
-//         await client.connect();
-//         const db = client.db("potlock");
-//         const collectionProject = db.collection("projects");
-//         const collectionDonation = db.collection("projects");
+async function getTotalContributedProject(){
+    try {
+        await client.connect();
+        const db = client.db("potlock");
+        const collectionProject = db.collection("projects");
+        const collectionDonation = db.collection("projects");
 
-//         let argsBase64 = btoa(`{"recipient_id":"${recipientId}"}`);
-//         // console.log(argsBase64)
+        const allProjects = await collectionProject.find({}).toArray()
         
-//         const rawResult = await provider.query({
-//             request_type: "call_function",
-//             account_id: "donate.potlock.near",
-//             method_name: "get_donation_by_id",
-//             args_base64: argsBase64,//{"recipient_id":"proofofvibes.near"} // this is arg that is encoded to base64, use this website to view https://www.base64decode.org/
-//             finality: "optimistic",
-//         });
+        for(const project of allProjects) {
+    
+            let argsBase64 = btoa(`{"recipient_id":"${project.project_id}"}`);
+            // console.log(argsBase64)
+            
+            const rawResult = await provider.query({
+                request_type: "call_function",
+                account_id: "donate.potlock.near",
+                method_name: "get_donations_for_recipient",
+                args_base64: argsBase64,//{"recipient_id":"proofofvibes.near"} // this is arg that is encoded to base64, use this website to view https://www.base64decode.org/
+                finality: "optimistic",
+            });
 
-//     } catch (error) {
+            const res = JSON.parse(Buffer.from(rawResult.result).toString());
+
+            // console.log(res)
+            
+            let totalDonations = new Big('0');
+            let totalReferral = new Big('0');
+
+            let donors = {};
+            for(const donation of res) {
+                const { id, ...rest } = donation; 
         
-//     }
-// }
+                const totalAmount = new Big(donation.total_amount);
+                const referralAmount = new Big(donation.referrer_fee || '0');
+                const protocolAmount = new Big(donation.protocol_fee || '0');
+                totalDonations = totalDonations.plus(
+                  totalAmount.minus(referralAmount).minus(protocolAmount),
+                );
+                totalReferral = totalReferral.plus(referralAmount);
+
+                donors[donation.donor_id] = true;
+                
+                console.log(`Success! Processing donation with ${id} of project ${project.project_id}`)
+            }
+    
+            const totalDonationsSmallerUnit = totalDonations
+            .div(1e24)
+            .toNumber()
+            .toFixed(2);
+
+            const totalReferralFeesSmallerUnit = totalReferral
+            .div(1e24)
+            .toNumber()
+            .toFixed(2);
+
+            const uniqueDonors = Object.keys(donors).length;
+            
+            await collectionProject.updateOne({project_id: project.project_id}, {$set:{
+                totalDonations: totalDonationsSmallerUnit,
+                donors: uniqueDonors,
+                totalReferral :totalReferralFeesSmallerUnit
+            }})
+    
+        }
+        return
+
+    } catch (error) {
+        console.error("Error Insert Data:", error);
+        throw new Error(error)
+
+    } finally {
+        await client.close()
+    }
+}
 
 module.exports = {getDonationsForRecipient, getProjectById}
 
@@ -341,4 +434,5 @@ module.exports = {getDonationsForRecipient, getProjectById}
 // getDonations();
 // getAdmins();
 // getDetailProject();
-// getDonationsForRecipient();
+// getDonationsForRecipient("magicbuild.near");
+// getTotalContributedProject()
