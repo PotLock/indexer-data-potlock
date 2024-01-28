@@ -1,6 +1,6 @@
 const nearAPI = require("near-api-js");
 const   {MongoClient}  = require("mongodb");
-const {getProjectById} = require('./crawls/flow_project_tab')
+const { getDonationsForRecipient, getProjectById, getSingleTotalContributedProject, getTagOfProjectById} = require('./crawls/flow_project_tab')
 
 require("dotenv").config();
 
@@ -53,6 +53,9 @@ try {
               ) {
                   const projectId = transaction?.signer_id
                   await getProjectById(projectId)
+                  await getSingleTotalContributedProject(projectId)
+                  await getTagOfProjectById(projectId)
+                  console.log(`inserted new project with project_id ${projectId}!`)
               }
               
             }
