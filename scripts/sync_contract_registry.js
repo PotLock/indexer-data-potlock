@@ -1,6 +1,5 @@
 const { providers } = require("near-api-js");
-const   {MongoClient}  = require("mongodb");
-const Big  = require("big.js");
+const  {MongoClient}  = require("mongodb");
 
 const {getProjectById, getSingleTotalContributedProject, getTagOfProjectById} = require('./crawls/flow_project_tab')
 
