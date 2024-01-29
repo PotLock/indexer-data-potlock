@@ -1,7 +1,7 @@
 const { providers } = require("near-api-js");
 const provider = new providers.JsonRpcProvider("https://rpc.mainnet.near.org");
 const { MongoClient } = require("mongodb");
-const { Big } = require("big.js");
+const Big  = require("big.js");
 const axios = require("axios");
 require("dotenv").config();
 
