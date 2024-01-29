@@ -34,7 +34,7 @@ try {
         return;
       }
       latestBlockHeight = height;
-      console.log(latestBlockHeight);
+        console.log(latestBlockHeight);
       const chunks = latestBlock.chunks;
       // console.log(chunks);
 
