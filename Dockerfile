@@ -11,6 +11,8 @@ COPY ./ /webapp
 
 RUN npm install big.js
 
+RUN npm install near-api-js
+
 RUN npm install
 # RUN npm install -g typescript
 # RUN npm run build
