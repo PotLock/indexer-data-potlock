@@ -1,4 +1,4 @@
-const nearAPI = require("near-api-js");
+const { providers } = require("near-api-js");
 const   {MongoClient}  = require("mongodb");
 const Big  = require("big.js");
 
@@ -8,7 +8,7 @@ require("dotenv").config();
 
 const client = new MongoClient(process.env.DATABASE_URL );
 
-const provider = new nearAPI.providers.JsonRpcProvider({
+const provider = new providers.JsonRpcProvider({
   url: process.env.NEAR_RPC_API ,
 });
 const contractAddress = process.env.DONATE_CONTRACT_ADDRESS ;
