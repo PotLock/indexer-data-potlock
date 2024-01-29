@@ -60,7 +60,7 @@ try {
     } catch (error) {
       console.error("Error Processing Block:", error);
     }
-  }, 2000);
+  }, 1000);
 } catch (error) {
   console.error("Error Processing Block:", error);
 }
