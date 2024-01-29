@@ -61,7 +61,7 @@ async function getPots() {
       }
     }))
 
-    // await collection.insertMany(allPot);
+    await collection.insertMany(allPot);
     console.log("Success! Pots inserted successfully!");
 
     return;
@@ -80,4 +80,4 @@ function fromIndivisible (amount, decimals) {
 }
 
 module.exports = {};
-getPots();
+// getPots();
