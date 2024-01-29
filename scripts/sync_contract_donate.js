@@ -1,6 +1,6 @@
 const nearAPI = require("near-api-js");
 const   {MongoClient}  = require("mongodb");
-const { getDonationsForRecipient, getProjectById, getSingleTotalContributedProject, getTagOfProjectById} = require ('./crawls/flow_project_tab')
+const { getDonationsForRecipient, getSingleTotalContributedProject} = require ('./crawls/flow_project_tab')
 
 require("dotenv").config();
 
@@ -34,7 +34,7 @@ try {
         return;
       }
       latestBlockHeight = height;
-        console.log(latestBlockHeight);
+      console.log(latestBlockHeight);
       const chunks = latestBlock.chunks;
       // console.log(chunks);
 

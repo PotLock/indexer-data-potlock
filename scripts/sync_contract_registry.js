@@ -1,6 +1,6 @@
 const nearAPI = require("near-api-js");
 const   {MongoClient}  = require("mongodb");
-const { getDonationsForRecipient, getProjectById, getSingleTotalContributedProject, getTagOfProjectById} = require('./crawls/flow_project_tab')
+const {getProjectById, getSingleTotalContributedProject, getTagOfProjectById} = require('./crawls/flow_project_tab')
 
 require("dotenv").config();
 
