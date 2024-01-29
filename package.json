@@ -16,7 +16,7 @@
     "big.js": "^6.2.1",
     "dotenv": "^16.3.1",
     "mongodb": "^6.3.0",
-    "near-api-js": "^3.0.1",
+    "near-api-js": "^3.0.2",
     "remove-markdown": "^0.5.0",
     "telegraf": "^4.15.3",
     "typescript": "^5.3.3"
